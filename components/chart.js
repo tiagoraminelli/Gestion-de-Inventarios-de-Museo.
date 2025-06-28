@@ -22,4 +22,3 @@ function crearGrafico(idCanvas, tipo, labels, data, labelTitulo, color) {
       }
     });
   }
-  

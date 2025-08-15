@@ -1,19 +1,17 @@
 <?php
 namespace Model;
 
+use PDO;
+
 class Bd {
-    public $conection;
+    private $conexion;
 
     public function __construct() {
-        try {
-            $this->conection = new \PDO('mysql:host=localhost;dbname=museo', 'root', '');
-            $this->conection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        } catch (\PDOException $e) {
-            echo "Error de conexión: " . $e->getMessage();
-            die();
-        }
+        $this->conexion = new PDO('mysql:host=localhost;dbname=museo', 'root', '');
+        $this->conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
+
     public function getConection() {
-        return $this->conection;
+        return $this->conexion;
     }
 }

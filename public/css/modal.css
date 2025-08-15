@@ -1,0 +1,75 @@
+#contenidoModalPieza {
+    background-color: #f1f5f9; /* Fondo profesional */
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+#contenidoModalPieza img {
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    max-width: 250px;
+    width: 100%;
+    height: auto;
+}
+
+.detalle-item {
+    background-color: #e2e8f0; /* similar a tus skill-tag */
+    color: #1e293b;
+    display: inline-block;
+    margin: 0.25rem 0.5rem 0.25rem 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Tarjeta moderna modal */
+.modern-card {
+  background-color: #fff;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.modern-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+}
+
+.modern-card img {
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  height: 180px;
+  object-fit: cover;
+}
+
+.modern-card .form-control,
+.modern-card .form-select {
+  border-radius: 8px;
+  box-shadow: none;
+  border: 1px solid #ddd;
+  transition: border-color 0.2s;
+}
+
+.modern-card .form-control:focus,
+.modern-card .form-select:focus {
+  border-color: #2196fe;
+  box-shadow: 0 0 0 0.2rem rgba(33,150,254,0.25);
+}
+
+.modern-card button {
+  border-radius: 8px;
+  padding: 0.5rem 1.2rem;
+  font-weight: 500;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.modern-card button:hover {
+  transform: translateY(-2px);
+}

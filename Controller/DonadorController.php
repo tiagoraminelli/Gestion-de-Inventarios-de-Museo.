@@ -25,6 +25,25 @@ class DonanteController {
         return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 
+    public function countDonantes() {
+        $stmt = $this->modelo->getConection()->query("SELECT COUNT(*) as total FROM donante");
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $result['total'] ?? 0;
+    }
+
+    // Obtener donantes por especie
+public function getPiezasPorDonante() {
+    $stmt = $this->modelo->getConection()->query("
+        SELECT CONCAT(d.nombre, ' ', d.apellido) as donante, COUNT(p.idPieza) as total
+        FROM pieza p
+        JOIN donante d ON p.Donante_idDonante = d.idDonante
+        GROUP BY p.Donante_idDonante
+    ");
+    
+    $result = $stmt->fetchAll(\PDO::FETCH_KEY_PAIR);
+    return $result;
+}
+
     // Crear un nuevo donante
     public function create() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {

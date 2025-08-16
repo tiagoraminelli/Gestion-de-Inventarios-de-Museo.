@@ -31,6 +31,59 @@ class PiezaController
         return $stmt->fetchColumn();
     }
 
+    public function getPiezasPorClasificacion()
+    {
+        $stmt = $this->modelo->getConection()->query("
+        SELECT clasificacion, COUNT(*) as total
+        FROM pieza
+        GROUP BY clasificacion
+    ");
+        $result = $stmt->fetchAll(\PDO::FETCH_KEY_PAIR);
+        return $result;
+    }
+
+    public function getPiezasPorAno() {
+    $stmt = $this->modelo->getConection()->query("
+        SELECT YEAR(fecha_ingreso) as ano, COUNT(*) as total
+        FROM pieza
+        GROUP BY YEAR(fecha_ingreso)
+        ORDER BY ano
+    ");
+    $result = $stmt->fetchAll(\PDO::FETCH_KEY_PAIR);
+    return $result;
+}
+public function getPiezasPorEstado() {
+    $stmt = $this->modelo->getConection()->query("
+        SELECT estado_conservacion, COUNT(*) as total
+        FROM pieza
+        GROUP BY estado_conservacion
+    ");
+    $result = $stmt->fetchAll(\PDO::FETCH_KEY_PAIR);
+    return $result;
+}
+
+    public function getUltimasPiezasCreadas($limit)
+    {
+        $stmt = $this->modelo->getConection()->prepare("SELECT * FROM pieza
+            ORDER BY created_at DESC
+            LIMIT :limit
+        ");
+        $stmt->bindParam(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getUltimasPiezasActualizadas($limit)
+    {
+        $stmt = $this->modelo->getConection()->prepare("SELECT * FROM pieza
+            ORDER BY updated_at DESC
+            LIMIT :limit
+        ");
+        $stmt->bindParam(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
     public function buscarPiezas($termino, $limit = null, $offset = null)
     {
         $sql = "SELECT * FROM pieza 
@@ -78,82 +131,82 @@ class PiezaController
 
     // Crear nueva pieza
     public function create()
-{
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
 
-    $tipos_especies = ["Biologia", "Zoologia", "Botanica", "Geologia", "Paleontologia", "Arqueologia", "Entomologia", "Ictiología", "Octologia"];
+        $tipos_especies = ["Biologia", "Zoologia", "Botanica", "Geologia", "Paleontologia", "Arqueologia", "Entomologia", "Ictiología", "Octologia"];
 
-    $numInventario = $_POST['num_inventario'] ?? '';
-    $especie = $_POST['especie'] ?? '';
-    $estado = $_POST['estado_conservacion'] ?? '';
-    $fechaIngreso = $_POST['fecha_ingreso'] ?? '';
-    $cantidad = $_POST['cantidad_de_piezas'] ?? '';
-    $clasificacion = $_POST['clasificacion'] ?? '';
-    $observacion = $_POST['observacion'] ?? '';
-    $donanteId = $_POST['Donante_idDonante'] ?? '';
-    $nombreImagen = '';
+        $numInventario = $_POST['num_inventario'] ?? '';
+        $especie = $_POST['especie'] ?? '';
+        $estado = $_POST['estado_conservacion'] ?? '';
+        $fechaIngreso = $_POST['fecha_ingreso'] ?? '';
+        $cantidad = $_POST['cantidad_de_piezas'] ?? '';
+        $clasificacion = $_POST['clasificacion'] ?? '';
+        $observacion = $_POST['observacion'] ?? '';
+        $donanteId = $_POST['Donante_idDonante'] ?? '';
+        $nombreImagen = '';
 
-    $errors = [];
+        $errors = [];
 
-    // Validaciones
-    if (empty($numInventario)) $errors[] = "El campo 'Número de Inventario' es obligatorio.";
-    if (empty($especie)) $errors[] = "El campo 'Especie' es obligatorio.";
-    if (is_numeric($estado)) $errors[] = "El campo 'Estado de Conservación' es inválido.";
-    if (!in_array($clasificacion, $tipos_especies)) $errors[] = "La clasificación debe ser: " . implode(", ", $tipos_especies);
-    if (!empty($fechaIngreso) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaIngreso)) $errors[] = "La fecha de ingreso debe tener formato YYYY-MM-DD.";
-    if (!empty($fechaIngreso) && $fechaIngreso > date('Y-m-d')) $errors[] = "La fecha de ingreso no puede ser futura.";
-    if (!is_numeric($cantidad)) $errors[] = "El campo 'Cantidad de Piezas' es inválido.";
-    if (empty($donanteId)) $errors[] = "Debe seleccionar un donante.";
+        // Validaciones
+        if (empty($numInventario)) $errors[] = "El campo 'Número de Inventario' es obligatorio.";
+        if (empty($especie)) $errors[] = "El campo 'Especie' es obligatorio.";
+        if (is_numeric($estado)) $errors[] = "El campo 'Estado de Conservación' es inválido.";
+        if (!in_array($clasificacion, $tipos_especies)) $errors[] = "La clasificación debe ser: " . implode(", ", $tipos_especies);
+        if (!empty($fechaIngreso) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaIngreso)) $errors[] = "La fecha de ingreso debe tener formato YYYY-MM-DD.";
+        if (!empty($fechaIngreso) && $fechaIngreso > date('Y-m-d')) $errors[] = "La fecha de ingreso no puede ser futura.";
+        if (!is_numeric($cantidad)) $errors[] = "El campo 'Cantidad de Piezas' es inválido.";
+        if (empty($donanteId)) $errors[] = "Debe seleccionar un donante.";
 
-    if (!empty($errors)) {
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'errors' => $errors]);
-        exit;
-    }
+        if (!empty($errors)) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'errors' => $errors]);
+            exit;
+        }
 
-    // Manejo de imagen
-    if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
-        $dir = __DIR__ . '/../assets/upload/';
-        if (!is_dir($dir)) mkdir($dir, 0755, true);
+        // Manejo de imagen
+        if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
+            $dir = __DIR__ . '/../assets/upload/';
+            if (!is_dir($dir)) mkdir($dir, 0755, true);
 
-        $ext = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
-        $nombreImagen = uniqid('pieza_') . '.' . $ext;
-        move_uploaded_file($_FILES['imagen']['tmp_name'], $dir . $nombreImagen);
-    }
+            $ext = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
+            $nombreImagen = uniqid('pieza_') . '.' . $ext;
+            move_uploaded_file($_FILES['imagen']['tmp_name'], $dir . $nombreImagen);
+        }
 
-    // Sanitización simple
-    $numInventario = htmlspecialchars(trim($numInventario), ENT_QUOTES, 'UTF-8');
-    $especie = htmlspecialchars(trim($especie), ENT_QUOTES, 'UTF-8');
-    $estado = htmlspecialchars(trim($estado), ENT_QUOTES, 'UTF-8');
-    $fechaIngreso = $fechaIngreso ?? null;
-    $cantidad = htmlspecialchars(trim($cantidad), ENT_QUOTES, 'UTF-8');
-    $observacion = htmlspecialchars(trim($observacion ?? ''), ENT_QUOTES, 'UTF-8');
+        // Sanitización simple
+        $numInventario = htmlspecialchars(trim($numInventario), ENT_QUOTES, 'UTF-8');
+        $especie = htmlspecialchars(trim($especie), ENT_QUOTES, 'UTF-8');
+        $estado = htmlspecialchars(trim($estado), ENT_QUOTES, 'UTF-8');
+        $fechaIngreso = $fechaIngreso ?? null;
+        $cantidad = htmlspecialchars(trim($cantidad), ENT_QUOTES, 'UTF-8');
+        $observacion = htmlspecialchars(trim($observacion ?? ''), ENT_QUOTES, 'UTF-8');
 
-    $stmt = $this->modelo->getConection()->prepare("INSERT INTO pieza (num_inventario, especie, estado_conservacion, fecha_ingreso,
+        $stmt = $this->modelo->getConection()->prepare("INSERT INTO pieza (num_inventario, especie, estado_conservacion, fecha_ingreso,
                            cantidad_de_piezas, clasificacion, observacion, imagen, Donante_idDonante)
         VALUES (:num_inventario, :especie, :estado_conservacion, :fecha_ingreso,
                 :cantidad_de_piezas, :clasificacion, :observacion, :imagen, :donante_id)
     ");
 
-    $success = $stmt->execute([
-        ':num_inventario' => $numInventario,
-        ':especie' => $especie,
-        ':estado_conservacion' => $estado,
-        ':fecha_ingreso' => $fechaIngreso,
-        ':cantidad_de_piezas' => $cantidad,
-        ':clasificacion' => $clasificacion,
-        ':observacion' => $observacion,
-        ':imagen' => $nombreImagen,
-        ':donante_id' => $donanteId
-    ]);
+        $success = $stmt->execute([
+            ':num_inventario' => $numInventario,
+            ':especie' => $especie,
+            ':estado_conservacion' => $estado,
+            ':fecha_ingreso' => $fechaIngreso,
+            ':cantidad_de_piezas' => $cantidad,
+            ':clasificacion' => $clasificacion,
+            ':observacion' => $observacion,
+            ':imagen' => $nombreImagen,
+            ':donante_id' => $donanteId
+        ]);
 
-    header('Content-Type: application/json');
-    echo json_encode([
-        'success' => $success,
-        'message' => $success ? 'Pieza creada correctamente' : 'Error al crear la pieza'
-    ]);
-    exit;
-}
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => $success,
+            'message' => $success ? 'Pieza creada correctamente' : 'Error al crear la pieza'
+        ]);
+        exit;
+    }
 
 
     // Eliminar pieza por ID
